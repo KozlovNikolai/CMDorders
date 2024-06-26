@@ -1,0 +1,6 @@
+storage_path: "postgres://dbuser:dbpass@localhost:35434/dbuser?sslmode=disable"
+repo_type: "memory" #memory|postgres|mongo
+http_server:
+  address: "0.0.0.0:8082"
+  timeout: 4s
+  idle_timout: 60s

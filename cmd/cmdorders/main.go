@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"github.com/KozlovNikolai/CMDorders/internal/config"
+	"github.com/KozlovNikolai/CMDorders/internal/server"
+)
 
 func main() {
-	fmt.Println("Hello world2")
+	cfg := config.MustLoad()
+
+	server := server.NewServer(cfg)
+
+	server.Run()
 }
