@@ -3,6 +3,7 @@ package inmemory
 import (
 	"context"
 	"errors"
+	"time"
 
 	"sync"
 
@@ -28,6 +29,7 @@ func (repo *InMemoryOrderRepository) CreateOrder(ctx context.Context, order mode
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
 	order.ID = repo.nextID
+	order.CreatedAt = time.Now()
 	repo.nextID++
 	repo.orders[order.ID] = order
 	return order.ID, nil
