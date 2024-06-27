@@ -22,7 +22,7 @@ func (m *MongoOrderRepository) DeleteOrder(ctx context.Context, id uint64) error
 }
 
 // GetAllOrdersList implements store.IOrderRepository.
-func (m *MongoOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]*model.Order, error) {
+func (m *MongoOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]model.Order, error) {
 	panic("unimplemented")
 }
 

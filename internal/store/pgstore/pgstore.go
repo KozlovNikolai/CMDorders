@@ -78,8 +78,8 @@ func (repo *PostgresOrderRepository) GetOrdersByPatientID(ctx context.Context, p
 	}
 	return orders, nil
 }
-func (repo *PostgresOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]*model.Order, error) {
-	var orders []*model.Order
+func (repo *PostgresOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]model.Order, error) {
+	var orders []model.Order
 	var query string
 	if is_active == 1 {
 		query = `
@@ -103,7 +103,7 @@ func (repo *PostgresOrderRepository) GetAllOrdersList(ctx context.Context, is_ac
 		if err != nil {
 			return nil, err
 		}
-		orders = append(orders, &order)
+		orders = append(orders, order)
 	}
 
 	if err := rows.Err(); err != nil {

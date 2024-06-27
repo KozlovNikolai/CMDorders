@@ -43,17 +43,17 @@ func (repo *InMemoryOrderRepository) GetOrderByID(ctx context.Context, order_id 
 	return &order, nil
 }
 
-func (repo *InMemoryOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]*model.Order, error) {
+func (repo *InMemoryOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]model.Order, error) {
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
-	var orders []*model.Order
+	var orders []model.Order
 	for _, order := range repo.orders {
 		if is_active == 1 {
 			if order.IsActive == 1 {
-				orders = append(orders, &order)
+				orders = append(orders, order)
 			}
 		} else {
-			orders = append(orders, &order)
+			orders = append(orders, order)
 		}
 	}
 	return orders, nil
