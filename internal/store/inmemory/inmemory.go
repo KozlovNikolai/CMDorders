@@ -23,13 +23,11 @@ func NewInMemoryOrderRepository() *InMemoryOrderRepository {
 	}
 }
 
-//
-
 func (repo *InMemoryOrderRepository) CreateOrder(ctx context.Context, order model.Order) (uint64, error) {
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
 	order.ID = repo.nextID
-	order.CreatedAt = time.Now()
+	order.CreatedAt = time.Now().UTC()
 	repo.nextID++
 	repo.orders[order.ID] = order
 	return order.ID, nil

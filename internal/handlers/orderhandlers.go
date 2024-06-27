@@ -37,7 +37,13 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	order.ID = id
+	orderPtr, err := h.repo.GetOrderByID(context.Background(), id)
+	if err != nil {
+		h.logger.Error("Error creating order", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	order = *orderPtr
 	c.JSON(http.StatusCreated, order)
 }
 
