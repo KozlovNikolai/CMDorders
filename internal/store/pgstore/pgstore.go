@@ -3,7 +3,7 @@ package pgstore
 import (
 	"context"
 
-	"github.com/KozlovNikolai/CMDorders/internal/model"
+	"github.com/KozlovNikolai/CMDorders/internal/models"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -17,7 +17,7 @@ func NewPostgresOrderRepository(db *pgxpool.Pool) *PostgresOrderRepository {
 
 // DeleteOrder(ctx context.Context, id uint64) error
 
-func (repo *PostgresOrderRepository) CreateOrder(ctx context.Context, order model.Order) (uint64, error) {
+func (repo *PostgresOrderRepository) CreateOrder(ctx context.Context, order models.Order) (uint64, error) {
 	var id uint64
 	query := `
 		INSERT INTO orders (created_at, patient_id, service_id, is_active) 
@@ -30,8 +30,8 @@ func (repo *PostgresOrderRepository) CreateOrder(ctx context.Context, order mode
 	return id, nil
 }
 
-func (repo *PostgresOrderRepository) GetOrderByID(ctx context.Context, order_id uint64) (*model.Order, error) {
-	var order model.Order
+func (repo *PostgresOrderRepository) GetOrderByID(ctx context.Context, order_id uint64) (*models.Order, error) {
+	var order models.Order
 	query := `
 		SELECT id, created_at, patient_id, service_id, is_active 
 		FROM orders
@@ -44,8 +44,8 @@ func (repo *PostgresOrderRepository) GetOrderByID(ctx context.Context, order_id 
 	return &order, nil
 }
 
-func (repo *PostgresOrderRepository) GetOrdersByPatientID(ctx context.Context, patient_id uint64, is_active int8) ([]*model.Order, error) {
-	var orders []*model.Order
+func (repo *PostgresOrderRepository) GetOrdersByPatientID(ctx context.Context, patient_id uint64, is_active int8) ([]models.Order, error) {
+	var orders []models.Order
 	var query string
 	if is_active == 1 {
 		query = `
@@ -65,12 +65,12 @@ func (repo *PostgresOrderRepository) GetOrdersByPatientID(ctx context.Context, p
 	defer rows.Close()
 
 	for rows.Next() {
-		var order model.Order
+		var order models.Order
 		err := rows.Scan(&order.ID, &order.CreatedAt, &order.PatientID, &order.ServiceID, &order.IsActive)
 		if err != nil {
 			return nil, err
 		}
-		orders = append(orders, &order)
+		orders = append(orders, order)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -78,8 +78,8 @@ func (repo *PostgresOrderRepository) GetOrdersByPatientID(ctx context.Context, p
 	}
 	return orders, nil
 }
-func (repo *PostgresOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]model.Order, error) {
-	var orders []model.Order
+func (repo *PostgresOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]models.Order, error) {
+	var orders []models.Order
 	var query string
 	if is_active == 1 {
 		query = `
@@ -98,7 +98,7 @@ func (repo *PostgresOrderRepository) GetAllOrdersList(ctx context.Context, is_ac
 	defer rows.Close()
 
 	for rows.Next() {
-		var order model.Order
+		var order models.Order
 		err := rows.Scan(&order.ID, &order.CreatedAt, &order.PatientID, &order.ServiceID, &order.IsActive)
 		if err != nil {
 			return nil, err
@@ -112,7 +112,7 @@ func (repo *PostgresOrderRepository) GetAllOrdersList(ctx context.Context, is_ac
 	return orders, nil
 }
 
-func (repo *PostgresOrderRepository) UpdateOrder(ctx context.Context, order model.Order) error {
+func (repo *PostgresOrderRepository) UpdateOrder(ctx context.Context, order models.Order) error {
 	query := `
 		UPDATE orders 
 		SET created_at=$1, patient_id=$2, service_id=$3, is_active=$4 

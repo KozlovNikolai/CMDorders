@@ -3,7 +3,7 @@ package mongostore
 import (
 	"context"
 
-	"github.com/KozlovNikolai/CMDorders/internal/model"
+	"github.com/KozlovNikolai/CMDorders/internal/models"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -12,7 +12,7 @@ type MongoOrderRepository struct {
 }
 
 // CreateOrder implements store.IOrderRepository.
-func (m *MongoOrderRepository) CreateOrder(ctx context.Context, order model.Order) (uint64, error) {
+func (m *MongoOrderRepository) CreateOrder(ctx context.Context, order models.Order) (uint64, error) {
 	panic("unimplemented")
 }
 
@@ -22,22 +22,22 @@ func (m *MongoOrderRepository) DeleteOrder(ctx context.Context, id uint64) error
 }
 
 // GetAllOrdersList implements store.IOrderRepository.
-func (m *MongoOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]model.Order, error) {
+func (m *MongoOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]models.Order, error) {
 	panic("unimplemented")
 }
 
 // GetOrderByID implements store.IOrderRepository.
-func (m *MongoOrderRepository) GetOrderByID(ctx context.Context, order_id uint64) (*model.Order, error) {
+func (m *MongoOrderRepository) GetOrderByID(ctx context.Context, order_id uint64) (*models.Order, error) {
 	panic("unimplemented")
 }
 
 // GetOrdersByPatientID implements store.IOrderRepository.
-func (m *MongoOrderRepository) GetOrdersByPatientID(ctx context.Context, patient_id uint64, is_active int8) ([]*model.Order, error) {
+func (m *MongoOrderRepository) GetOrdersByPatientID(ctx context.Context, patient_id uint64, is_active int8) ([]models.Order, error) {
 	panic("unimplemented")
 }
 
 // UpdateOrder implements store.IOrderRepository.
-func (m *MongoOrderRepository) UpdateOrder(ctx context.Context, order model.Order) error {
+func (m *MongoOrderRepository) UpdateOrder(ctx context.Context, order models.Order) error {
 	panic("unimplemented")
 }
 
@@ -46,7 +46,7 @@ func NewMongoOrderRepository(client *mongo.Client, dbName, collName string) *Mon
 	return &MongoOrderRepository{collection: collection}
 }
 
-// func (repo *MongoOrderRepository) CreateEmployer(ctx context.Context, order model.Order) (int, error) {
+// func (repo *MongoOrderRepository) CreateEmployer(ctx context.Context, order models.Order) (int, error) {
 // 	result, err := repo.collection.InsertOne(ctx, order)
 // 	if err != nil {
 // 		return 0, err
@@ -54,8 +54,8 @@ func NewMongoOrderRepository(client *mongo.Client, dbName, collName string) *Mon
 // 	return result.InsertedID.(int), nil
 // }
 
-// func (repo *MongoEmployerRepository) GetEmployerByID(ctx context.Context, id int) (models.Employer, error) {
-// 	var employer models.Employer
+// func (repo *MongoEmployerRepository) GetEmployerByID(ctx context.Context, id int) (modelss.Employer, error) {
+// 	var employer modelss.Employer
 // 	filter := bson.D{{Key: "id", Value: id}}
 // 	err := repo.collection.FindOne(ctx, filter).Decode(&employer)
 // 	if err == mongo.ErrNoDocuments {
@@ -64,8 +64,8 @@ func NewMongoOrderRepository(client *mongo.Client, dbName, collName string) *Mon
 // 	return employer, err
 // }
 
-// func (repo *MongoEmployerRepository) GetAllEmployers(ctx context.Context) ([]models.Employer, error) {
-// 	var employers []models.Employer
+// func (repo *MongoEmployerRepository) GetAllEmployers(ctx context.Context) ([]modelss.Employer, error) {
+// 	var employers []modelss.Employer
 // 	cursor, err := repo.collection.Find(ctx, bson.D{})
 // 	if err != nil {
 // 		return nil, err
@@ -73,7 +73,7 @@ func NewMongoOrderRepository(client *mongo.Client, dbName, collName string) *Mon
 // 	defer cursor.Close(ctx)
 
 // 	for cursor.Next(ctx) {
-// 		var employer models.Employer
+// 		var employer modelss.Employer
 // 		err := cursor.Decode(&employer)
 // 		if err != nil {
 // 			return nil, err
@@ -87,7 +87,7 @@ func NewMongoOrderRepository(client *mongo.Client, dbName, collName string) *Mon
 // 	return employers, nil
 // }
 
-// func (repo *MongoEmployerRepository) UpdateEmployer(ctx context.Context, id int, employer models.Employer) error {
+// func (repo *MongoEmployerRepository) UpdateEmployer(ctx context.Context, id int, employer modelss.Employer) error {
 // 	filter := bson.D{{Key: "id", Value: id}}
 // 	update := bson.D{{Key: "$set", Value: employer}}
 // 	_, err := repo.collection.UpdateOne(ctx, filter, update)
