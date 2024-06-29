@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/KozlovNikolai/CMDorders/internal/model"
+	"github.com/KozlovNikolai/CMDorders/internal/models"
 	"github.com/KozlovNikolai/CMDorders/internal/store"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -18,13 +18,14 @@ type OrderHandler struct {
 }
 
 func NewOrderHandler(logger *zap.Logger, repo store.IOrderRepository) *OrderHandler {
-	return &OrderHandler{logger: logger, repo: repo}
+	return &OrderHandler{
+		logger: logger,
+		repo:   repo,
+	}
 }
 
-// DeleteOrder(ctx context.Context, id uint64) error
-
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
-	var order model.Order
+	var order models.Order
 	if err := c.ShouldBindJSON(&order); err != nil {
 		h.logger.Error("Error binding JSON", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -37,26 +38,32 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	order.ID = id
+	orderPtr, err := h.repo.GetOrderByID(context.Background(), id)
+	if err != nil {
+		h.logger.Error("Error creating order", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	order = *orderPtr
 	c.JSON(http.StatusCreated, order)
 }
 
 func (h *OrderHandler) GetOrderByID(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-
-	employer, err := h.repo.GetOrderByID(context.Background(), uint64(id))
+	// fmt.Println(h.cliPatients.GetList(context.Background()))
+	order, err := h.repo.GetOrderByID(context.Background(), uint64(id))
 	if err != nil {
 		h.logger.Error("Error getting order", zap.Error(err))
 		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 		return
 	}
-	c.JSON(http.StatusOK, employer)
+	c.JSON(http.StatusOK, order)
 }
 
 func (h *OrderHandler) GetOrdersByPatientID(c *gin.Context) {
 	patient_id, _ := strconv.Atoi(c.Param("patient_id"))
 	is_active, _ := strconv.Atoi(c.Param("is_active"))
-
+	fmt.Printf("Handler p-id=%d, is-a=%d\n", patient_id, is_active)
 	orders, err := h.repo.GetOrdersByPatientID(context.Background(), uint64(patient_id), int8(is_active))
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Error getting orders where is_active=%d, patient_id=%d", is_active, patient_id), zap.Error(err))
@@ -78,7 +85,7 @@ func (h *OrderHandler) GetAllOrdersList(c *gin.Context) {
 }
 
 func (h *OrderHandler) UpdateOrder(c *gin.Context) {
-	var order model.Order
+	var order models.Order
 	if err := c.ShouldBindJSON(&order); err != nil {
 		h.logger.Error("Error binding JSON", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
