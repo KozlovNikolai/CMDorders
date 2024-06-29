@@ -1,6 +1,7 @@
 package restclient
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,8 +17,8 @@ type RestClient struct {
 	Model      interface{}
 }
 
-func NewRestClient(baseURL string, target string, model interface{}) *RestClient {
-	return &RestClient{
+func NewRestClient(baseURL string, target string, model interface{}) RestClient {
+	return RestClient{
 		HTTPClient: &http.Client{},
 		BaseURL:    baseURL,
 		Target:     target,
@@ -25,7 +26,7 @@ func NewRestClient(baseURL string, target string, model interface{}) *RestClient
 	}
 }
 
-func (c *RestClient) GetByID(id int) (*interface{}, error) {
+func (c RestClient) GetByID(ctx context.Context, id uint64) (interface{}, error) {
 	url := fmt.Sprintf("%s%s%d", c.BaseURL, c.Target, id)
 	resp, err := c.HTTPClient.Get(url)
 	if err != nil {
@@ -46,11 +47,11 @@ func (c *RestClient) GetByID(id int) (*interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &m, nil
+	return m, nil
 }
 
-func (c *RestClient) GetList() (interface{}, error) {
-	url := fmt.Sprintf("%s%s", c.BaseURL, c.Target)
+func (c RestClient) GetList(ctx context.Context) (interface{}, error) {
+	url := fmt.Sprintf("%s%slist", c.BaseURL, c.Target)
 	resp, err := c.HTTPClient.Get(url)
 	if err != nil {
 		return nil, err

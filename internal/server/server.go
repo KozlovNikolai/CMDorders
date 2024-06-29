@@ -24,6 +24,11 @@ type Server struct {
 	config *config.Config
 }
 
+// type RemoteStore struct {
+// 	cliPatients client.IRemoteStore
+// 	cliServices client.IRemoteStore
+// }
+
 func NewServer(cfg *config.Config) *Server {
 	// Инициализация логгера Zap
 	logger, err := zap.NewDevelopment()
@@ -59,6 +64,11 @@ func NewServer(cfg *config.Config) *Server {
 		logger: logger,
 		config: cfg,
 	}
+	// Инициализация доступа к удаленным данным
+	// remotestore := RemoteStore{
+	// 	cliPatients: restclient.NewRestClient("http://localhost:8080", "/patients/", models.NewPatient()),
+	// 	cliServices: restclient.NewRestClient("http://localhost:8081", "/services/", models.NewService()),
+	// }
 
 	// Инициализация обработчиков
 	orderHandler := handlers.NewOrderHandler(logger, repo)

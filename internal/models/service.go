@@ -5,3 +5,7 @@ type Service struct {
 	Name  string `json:"name" db:"name"`
 	Price int64  `json:"price" db:"price"`
 }
+
+func NewService() Service {
+	return Service{}
+}

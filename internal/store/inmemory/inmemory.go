@@ -8,29 +8,50 @@ import (
 
 	"sync"
 
+	"github.com/KozlovNikolai/CMDorders/internal/client"
+	"github.com/KozlovNikolai/CMDorders/internal/client/restclient"
 	"github.com/KozlovNikolai/CMDorders/internal/models"
 )
 
 type InMemoryOrderRepository struct {
-	orders map[uint64]models.Order
-	nextID uint64
-	mutex  sync.Mutex
+	orders      map[uint64]models.Order
+	nextID      uint64
+	cliPatients client.IRemoteStore
+	cliServices client.IRemoteStore
+	mutex       sync.Mutex
 }
 
 func NewInMemoryOrderRepository() *InMemoryOrderRepository {
 	return &InMemoryOrderRepository{
-		orders: make(map[uint64]models.Order),
-		nextID: 1,
+		orders:      make(map[uint64]models.Order),
+		nextID:      1,
+		cliPatients: restclient.NewRestClient("http://localhost:8080", "/patients/", models.NewPatient()),
+		cliServices: restclient.NewRestClient("http://localhost:8081", "/services/", models.NewService()),
 	}
 }
 
 func (repo *InMemoryOrderRepository) CreateOrder(ctx context.Context, order models.Order) (uint64, error) {
+	patient, err := repo.cliPatients.GetByID(ctx, order.PatientID)
+	if err != nil {
+		return 0, err
+	}
+	fmt.Println("-------------")
+	fmt.Println("    Услуги:")
+	for _, service := range order.ServiceID {
+		svc, err := repo.cliServices.GetByID(ctx, uint64(service))
+		if err != nil {
+			return 0, err
+		}
+		fmt.Println(svc)
+	}
+
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
 	order.ID = repo.nextID
 	order.CreatedAt = time.Now().UTC()
 	repo.nextID++
 	repo.orders[order.ID] = order
+	fmt.Printf("Для пациента:\n%v\nсоздан заказ номер: %d\n", patient, order.ID)
 	return order.ID, nil
 }
 

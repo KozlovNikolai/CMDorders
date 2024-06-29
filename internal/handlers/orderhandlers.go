@@ -50,14 +50,14 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 func (h *OrderHandler) GetOrderByID(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-
-	employer, err := h.repo.GetOrderByID(context.Background(), uint64(id))
+	// fmt.Println(h.cliPatients.GetList(context.Background()))
+	order, err := h.repo.GetOrderByID(context.Background(), uint64(id))
 	if err != nil {
 		h.logger.Error("Error getting order", zap.Error(err))
 		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 		return
 	}
-	c.JSON(http.StatusOK, employer)
+	c.JSON(http.StatusOK, order)
 }
 
 func (h *OrderHandler) GetOrdersByPatientID(c *gin.Context) {

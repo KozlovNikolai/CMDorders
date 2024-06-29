@@ -2,11 +2,9 @@ package client
 
 import (
 	"context"
-
-	"github.com/KozlovNikolai/CMDorders/internal/models"
 )
 
-type IPatientsStore interface {
-	GetByID(ctx context.Context, patient_id uint64) (*models.Patient, error)
-	GetList(ctx context.Context) ([]models.Patient, error)
+type IRemoteStore interface {
+	GetByID(ctx context.Context, id uint64) (interface{}, error)
+	GetList(ctx context.Context) (interface{}, error)
 }

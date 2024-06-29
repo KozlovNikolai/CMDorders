@@ -11,3 +11,7 @@ type Patient struct {
 	Gender     uint8     `json:"gender" db:"gender"`
 	Birthday   time.Time `json:"birthday" db:"birthday"`
 }
+
+func NewPatient() Patient {
+	return Patient{}
+}
