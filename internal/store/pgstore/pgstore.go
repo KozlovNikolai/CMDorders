@@ -23,7 +23,7 @@ func (repo *PostgresOrderRepository) CreateOrder(ctx context.Context, order mode
 		INSERT INTO orders (created_at, patient_id, service_id, is_active) 
 		VALUES ($1, $2, $3, $4) 
 		RETURNING id`
-	err := repo.db.QueryRow(ctx, query, order.CreatedAt, order.PatientID, order.ServiceID, order.IsActive).Scan(&id)
+	err := repo.db.QueryRow(ctx, query, order.CreatedAt, order.Patient.ID, order.Services, order.IsActive).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -37,7 +37,7 @@ func (repo *PostgresOrderRepository) GetOrderByID(ctx context.Context, order_id 
 		FROM orders
 		WHERE id=$1`
 	row := repo.db.QueryRow(ctx, query, order_id)
-	err := row.Scan(&order.ID, &order.CreatedAt, &order.PatientID, &order.ServiceID, &order.IsActive)
+	err := row.Scan(&order.ID, &order.CreatedAt, &order.Patient.ID, &order.Services, &order.IsActive)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (repo *PostgresOrderRepository) GetOrdersByPatientID(ctx context.Context, p
 
 	for rows.Next() {
 		var order models.Order
-		err := rows.Scan(&order.ID, &order.CreatedAt, &order.PatientID, &order.ServiceID, &order.IsActive)
+		err := rows.Scan(&order.ID, &order.CreatedAt, &order.Patient.ID, &order.Services, &order.IsActive)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +99,7 @@ func (repo *PostgresOrderRepository) GetAllOrdersList(ctx context.Context, is_ac
 
 	for rows.Next() {
 		var order models.Order
-		err := rows.Scan(&order.ID, &order.CreatedAt, &order.PatientID, &order.ServiceID, &order.IsActive)
+		err := rows.Scan(&order.ID, &order.CreatedAt, &order.Patient.ID, &order.Services, &order.IsActive)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +117,7 @@ func (repo *PostgresOrderRepository) UpdateOrder(ctx context.Context, order mode
 		UPDATE orders 
 		SET created_at=$1, patient_id=$2, service_id=$3, is_active=$4 
 		WHERE id=$5`
-	_, err := repo.db.Exec(ctx, query, order.CreatedAt, order.PatientID, order.ServiceID, order.IsActive, order.ID)
+	_, err := repo.db.Exec(ctx, query, order.CreatedAt, order.Patient.ID, order.Services, order.IsActive, order.ID)
 	return err
 }
 
