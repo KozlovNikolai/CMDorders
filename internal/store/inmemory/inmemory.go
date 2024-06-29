@@ -31,14 +31,14 @@ func NewInMemoryOrderRepository() *InMemoryOrderRepository {
 }
 
 func (repo *InMemoryOrderRepository) CreateOrder(ctx context.Context, order models.Order) (uint64, error) {
-	patient, err := repo.cliPatients.GetByID(ctx, order.PatientID)
+	patient, err := repo.cliPatients.GetByID(ctx, uint64(order.Patient.ID))
 	if err != nil {
 		return 0, err
 	}
 	fmt.Println("-------------")
 	fmt.Println("    Услуги:")
-	for _, service := range order.ServiceID {
-		svc, err := repo.cliServices.GetByID(ctx, uint64(service))
+	for _, service := range order.Services {
+		svc, err := repo.cliServices.GetByID(ctx, uint64(service.ID))
 		if err != nil {
 			return 0, err
 		}
@@ -87,7 +87,7 @@ func (repo *InMemoryOrderRepository) GetOrdersByPatientID(ctx context.Context, p
 	var orders []models.Order
 	fmt.Printf("InMemory p-id=%d, is-a=%d\n", patient_id, is_active)
 	for _, order := range repo.orders {
-		if order.PatientID != patient_id {
+		if uint64(order.Patient.ID) != patient_id {
 			continue
 		}
 		if is_active == 1 {
