@@ -13,4 +13,5 @@ type IOrderRepository interface {
 	GetAllOrdersList(ctx context.Context, is_active int8) ([]models.Order, error)
 	UpdateOrder(ctx context.Context, order models.Order) error
 	DeleteOrder(ctx context.Context, id uint64) error
+	AddServicesToOrder(ctx context.Context, order_id uint64, patient_id uint64, services []models.Service) error
 }

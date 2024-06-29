@@ -79,6 +79,7 @@ func NewServer(cfg *config.Config) *Server {
 	server.router.GET("/orders/list", orderHandler.GetAllOrdersList)
 	server.router.GET("/orders/bypatient/:patient_id/:is_active", orderHandler.GetOrdersByPatientID)
 	server.router.PUT("/orders/:id", orderHandler.UpdateOrder)
+	server.router.PATCH("/orders/addservices", orderHandler.AddServicesToOrder)
 	server.router.DELETE("/orders/:id", orderHandler.DeleteOrder)
 
 	return server

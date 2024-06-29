@@ -101,6 +101,23 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "Updated successfully"})
 }
 
+func (h *OrderHandler) AddServicesToOrder(c *gin.Context) {
+	var order models.Order
+	if err := c.ShouldBindJSON(&order); err != nil {
+		h.logger.Error("Error binding JSON", zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.repo.AddServicesToOrder(context.Background(), order.ID, uint64(order.Patient.ID), order.Services)
+	if err != nil {
+		h.logger.Error("Error adding services to order", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "Added successfully"})
+}
+
 func (h *OrderHandler) DeleteOrder(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	err := h.repo.DeleteOrder(context.Background(), uint64(id))

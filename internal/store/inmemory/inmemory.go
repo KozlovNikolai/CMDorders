@@ -110,6 +110,35 @@ func (repo *InMemoryOrderRepository) UpdateOrder(ctx context.Context, order mode
 	repo.orders[order.ID] = order
 	return nil
 }
+func (repo *InMemoryOrderRepository) AddServicesToOrder(ctx context.Context, order_id uint64, patient_id uint64, services []models.Service) error {
+	repo.mutex.Lock()
+	defer repo.mutex.Unlock()
+	order, exists := repo.orders[order_id]
+	if !exists {
+		return errors.New("order not found")
+	}
+	if patient_id != uint64(order.Patient.ID) {
+		return errors.New("this patient is not represented in this order")
+	}
+	svcs := []models.Service{}
+	var servicesCasted []models.Service
+	var i interface{} = services
+	if s, ok := i.([]models.Service); ok {
+		servicesCasted = s
+	} else {
+		return errors.New("input parametr not equal []model.Service")
+	}
+	for _, svc := range servicesCasted {
+		_, err := repo.cliServices.GetByID(ctx, svc.ID)
+		if err != nil {
+			return err
+		}
+		svcs = append(svcs, svc)
+	}
+	order.Services = append(order.Services, svcs...)
+	repo.orders[order_id] = order
+	return nil
+}
 
 func (repo *InMemoryOrderRepository) DeleteOrder(ctx context.Context, id uint64) error {
 	repo.mutex.Lock()
