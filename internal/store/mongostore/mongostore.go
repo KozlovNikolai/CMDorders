@@ -11,6 +11,11 @@ type MongoOrderRepository struct {
 	collection *mongo.Collection
 }
 
+// AddServicesToOrder implements store.IOrderRepository.
+func (m *MongoOrderRepository) AddServicesToOrder(ctx context.Context, order_id uint64, patient_id uint64, services []models.Service) error {
+	panic("unimplemented")
+}
+
 // CreateOrder implements store.IOrderRepository.
 func (m *MongoOrderRepository) CreateOrder(ctx context.Context, order models.Order) (uint64, error) {
 	panic("unimplemented")

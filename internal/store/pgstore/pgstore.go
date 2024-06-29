@@ -11,6 +11,11 @@ type PostgresOrderRepository struct {
 	db *pgxpool.Pool
 }
 
+// AddServicesToOrder implements store.IOrderRepository.
+func (repo *PostgresOrderRepository) AddServicesToOrder(ctx context.Context, order_id uint64, patient_id uint64, services []models.Service) error {
+	panic("unimplemented")
+}
+
 func NewPostgresOrderRepository(db *pgxpool.Pool) *PostgresOrderRepository {
 	return &PostgresOrderRepository{db: db}
 }
