@@ -11,9 +11,11 @@ import (
 	"github.com/KozlovNikolai/CMDorders/internal/client"
 	"github.com/KozlovNikolai/CMDorders/internal/client/restclient"
 	"github.com/KozlovNikolai/CMDorders/internal/models"
+	"go.uber.org/zap"
 )
 
 type InMemoryOrderRepository struct {
+	logger      *zap.Logger
 	orders      map[uint64]models.Order
 	nextID      uint64
 	cliPatients client.IRemoteStore
@@ -21,12 +23,13 @@ type InMemoryOrderRepository struct {
 	mutex       sync.Mutex
 }
 
-func NewInMemoryOrderRepository() *InMemoryOrderRepository {
+func NewInMemoryOrderRepository(logger *zap.Logger) *InMemoryOrderRepository {
 	return &InMemoryOrderRepository{
+		logger:      logger,
 		orders:      make(map[uint64]models.Order),
 		nextID:      1,
-		cliPatients: restclient.NewRestClient("http://localhost:8080", "/patients/", models.NewPatient()),
-		cliServices: restclient.NewRestClient("http://localhost:8081", "/services/", models.NewService()),
+		cliPatients: restclient.NewRestClient("http://localhost:8080", "/patients/", models.NewPatient(), logger),
+		cliServices: restclient.NewRestClient("http://localhost:8081", "/services/", models.NewService(), logger),
 	}
 }
 
@@ -35,8 +38,6 @@ func (repo *InMemoryOrderRepository) CreateOrder(ctx context.Context, order mode
 	if err != nil {
 		return 0, err
 	}
-	fmt.Println("-------------")
-	fmt.Println("    Услуги:")
 	for _, service := range order.Services {
 		svc, err := repo.cliServices.GetByID(ctx, uint64(service.ID))
 		if err != nil {
@@ -51,7 +52,10 @@ func (repo *InMemoryOrderRepository) CreateOrder(ctx context.Context, order mode
 	order.CreatedAt = time.Now().UTC()
 	repo.nextID++
 	repo.orders[order.ID] = order
-	fmt.Printf("Для пациента:\n%v\nсоздан заказ номер: %d\n", patient, order.ID)
+	msg := fmt.Sprintf("Для пациента:\n%v\nсоздан заказ номер: %d\n", patient, order.ID)
+	repo.logger.Debug("CreateOrder",
+		zap.String("info", msg),
+	)
 	return order.ID, nil
 }
 
@@ -85,7 +89,10 @@ func (repo *InMemoryOrderRepository) GetOrdersByPatientID(ctx context.Context, p
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
 	var orders []models.Order
-	fmt.Printf("InMemory p-id=%d, is-a=%d\n", patient_id, is_active)
+	msg := fmt.Sprintf("InMemory p-id=%d, is-a=%d\n", patient_id, is_active)
+	repo.logger.Debug("GetOrdersByPatientID",
+		zap.String("info", msg),
+	)
 	for _, order := range repo.orders {
 		if uint64(order.Patient.ID) != patient_id {
 			continue
