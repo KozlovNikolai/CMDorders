@@ -76,7 +76,7 @@ func NewServer(cfg *config.Config) *Server {
 
 	// CORS
 	server.router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8085", "https://google.com"},
+		AllowOrigins:     []string{"http://localhost:8085", "https://www.google.com"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length", "X-Request-ID"},
