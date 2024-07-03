@@ -5,10 +5,12 @@ import (
 
 	"github.com/KozlovNikolai/CMDorders/internal/models"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"go.uber.org/zap"
 )
 
 type PostgresOrderRepository struct {
-	db *pgxpool.Pool
+	logger *zap.Logger
+	db     *pgxpool.Pool
 }
 
 // AddServicesToOrder implements store.IOrderRepository.
@@ -16,8 +18,11 @@ func (repo *PostgresOrderRepository) AddServicesToOrder(ctx context.Context, ord
 	panic("unimplemented")
 }
 
-func NewPostgresOrderRepository(db *pgxpool.Pool) *PostgresOrderRepository {
-	return &PostgresOrderRepository{db: db}
+func NewPostgresOrderRepository(db *pgxpool.Pool, logger *zap.Logger) *PostgresOrderRepository {
+	return &PostgresOrderRepository{
+		logger: logger,
+		db:     db,
+	}
 }
 
 // DeleteOrder(ctx context.Context, id uint64) error

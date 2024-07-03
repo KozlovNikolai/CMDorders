@@ -4,9 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
+
+	"github.com/gin-contrib/cors"
 
 	"github.com/KozlovNikolai/CMDorders/internal/config"
 	"github.com/KozlovNikolai/CMDorders/internal/handlers"
+	"github.com/KozlovNikolai/CMDorders/internal/middlewares"
 	"github.com/KozlovNikolai/CMDorders/internal/store"
 	"github.com/KozlovNikolai/CMDorders/internal/store/inmemory"
 	"github.com/KozlovNikolai/CMDorders/internal/store/mongostore"
@@ -31,6 +35,7 @@ type Server struct {
 
 func NewServer(cfg *config.Config) *Server {
 	// Инициализация логгера Zap
+	//	logger, err := zap.NewProduction()
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
@@ -41,19 +46,19 @@ func NewServer(cfg *config.Config) *Server {
 	// Выбор репозитория
 	switch cfg.RepoType {
 	case "memory":
-		repo = inmemory.NewInMemoryOrderRepository()
+		repo = inmemory.NewInMemoryOrderRepository(logger)
 	case "postgres":
 		pool, err := pgxpool.Connect(context.Background(), "postgres://username:password@localhost:5432/dbname")
 		if err != nil {
 			logger.Fatal("Unable to connect to database", zap.Error(err))
 		}
-		repo = pgstore.NewPostgresOrderRepository(pool)
+		repo = pgstore.NewPostgresOrderRepository(pool, logger)
 	case "mongo":
 		client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
 		if err != nil {
 			logger.Fatal("Unable to connect to MongoDB", zap.Error(err))
 		}
-		repo = mongostore.NewMongoOrderRepository(client, "mydatabase", "employers")
+		repo = mongostore.NewMongoOrderRepository(client, "mydatabase", "employers", logger)
 	default:
 		logger.Fatal("Invalid repository type")
 	}
@@ -64,14 +69,24 @@ func NewServer(cfg *config.Config) *Server {
 		logger: logger,
 		config: cfg,
 	}
-	// Инициализация доступа к удаленным данным
-	// remotestore := RemoteStore{
-	// 	cliPatients: restclient.NewRestClient("http://localhost:8080", "/patients/", models.NewPatient()),
-	// 	cliServices: restclient.NewRestClient("http://localhost:8081", "/services/", models.NewService()),
-	// }
 
+	// Middleware
+	server.router.Use(middlewares.LoggerMiddleware(logger))
+	server.router.Use(middlewares.RequestIDMiddleware())
+
+	// CORS
+	server.router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:8085", "https://google.com"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length", "X-Request-ID"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	// Инициализация обработчиков
 	orderHandler := handlers.NewOrderHandler(logger, repo)
+
+	// server.router.Use(middleware.LogMW())
 
 	// CRUD маршруты для Employers
 	server.router.POST("/orders", orderHandler.CreateOrder)

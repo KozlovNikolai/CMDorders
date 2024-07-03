@@ -5,6 +5,7 @@ import (
 
 	"github.com/KozlovNikolai/CMDorders/internal/models"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.uber.org/zap"
 )
 
 type MongoOrderRepository struct {
@@ -46,7 +47,7 @@ func (m *MongoOrderRepository) UpdateOrder(ctx context.Context, order models.Ord
 	panic("unimplemented")
 }
 
-func NewMongoOrderRepository(client *mongo.Client, dbName, collName string) *MongoOrderRepository {
+func NewMongoOrderRepository(client *mongo.Client, dbName, collName string, logger *zap.Logger) *MongoOrderRepository {
 	collection := client.Database(dbName).Collection(collName)
 	return &MongoOrderRepository{collection: collection}
 }
