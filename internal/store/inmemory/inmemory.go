@@ -43,7 +43,10 @@ func (repo *InMemoryOrderRepository) CreateOrder(ctx context.Context, order mode
 		if err != nil {
 			return 0, err
 		}
-		fmt.Println(svc)
+		msg := fmt.Sprintf("%v", svc)
+		repo.logger.Debug("AddServiceToOrder",
+			zap.String("info", msg),
+		)
 	}
 
 	repo.mutex.Lock()
