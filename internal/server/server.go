@@ -8,9 +8,9 @@ import (
 
 	"github.com/gin-contrib/cors"
 
-	"github.com/KozlovNikolai/CMDorders/internal/config"
 	"github.com/KozlovNikolai/CMDorders/internal/handlers"
 	"github.com/KozlovNikolai/CMDorders/internal/middlewares"
+	"github.com/KozlovNikolai/CMDorders/internal/pkg/config"
 	"github.com/KozlovNikolai/CMDorders/internal/store"
 	"github.com/KozlovNikolai/CMDorders/internal/store/inmemory"
 	"github.com/KozlovNikolai/CMDorders/internal/store/mongostore"

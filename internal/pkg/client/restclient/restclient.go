@@ -29,7 +29,7 @@ func NewRestClient(baseURL string, target string, model interface{}, logger *zap
 	}
 }
 
-func (c RestClient) GetByID(ctx context.Context, id uint64) (interface{}, error) {
+func (c RestClient) GetByID(ctx context.Context, id int) (interface{}, error) {
 	url := fmt.Sprintf("%s%s%d", c.BaseURL, c.Target, id)
 	resp, err := c.HTTPClient.Get(url)
 	if err != nil {
