@@ -51,7 +51,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 func (h *OrderHandler) GetOrderByID(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	// fmt.Println(h.cliPatients.GetList(context.Background()))
-	order, err := h.repo.GetOrderByID(context.Background(), uint64(id))
+	order, err := h.repo.GetOrderByID(context.Background(), id)
 	if err != nil {
 		h.logger.Error("Error getting order", zap.Error(err))
 		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
@@ -62,11 +62,11 @@ func (h *OrderHandler) GetOrderByID(c *gin.Context) {
 
 func (h *OrderHandler) GetOrdersByPatientID(c *gin.Context) {
 	patient_id, _ := strconv.Atoi(c.Param("patient_id"))
-	is_active, _ := strconv.Atoi(c.Param("is_active"))
-	fmt.Printf("Handler p-id=%d, is-a=%d\n", patient_id, is_active)
-	orders, err := h.repo.GetOrdersByPatientID(context.Background(), uint64(patient_id), int8(is_active))
+	is_active, _ := strconv.ParseBool(c.Param("is_active"))
+	fmt.Printf("Handler p-id=%d, is-a=%v\n", patient_id, is_active)
+	orders, err := h.repo.GetOrdersByPatientID(context.Background(), patient_id, is_active)
 	if err != nil {
-		h.logger.Error(fmt.Sprintf("Error getting orders where is_active=%d, patient_id=%d", is_active, patient_id), zap.Error(err))
+		h.logger.Error(fmt.Sprintf("Error getting orders where is_active=%v, patient_id=%d", is_active, patient_id), zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -74,10 +74,10 @@ func (h *OrderHandler) GetOrdersByPatientID(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetAllOrdersList(c *gin.Context) {
-	is_active, _ := strconv.Atoi(c.Param("is_active"))
-	orders, err := h.repo.GetAllOrdersList(context.Background(), int8(is_active))
+	is_active, _ := strconv.ParseBool(c.Param("is_active"))
+	orders, err := h.repo.GetAllOrdersList(context.Background(), is_active)
 	if err != nil {
-		h.logger.Error(fmt.Sprintf("Error getting all orders where is_active=%d", is_active), zap.Error(err))
+		h.logger.Error(fmt.Sprintf("Error getting all orders where is_active=%v", is_active), zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -109,7 +109,7 @@ func (h *OrderHandler) AddServicesToOrder(c *gin.Context) {
 		return
 	}
 
-	err := h.repo.AddServicesToOrder(context.Background(), order.ID, uint64(order.Patient.ID), order.Services)
+	err := h.repo.AddServicesToOrder(context.Background(), order.ID, order.PatientID, order.ServiceIDs)
 	if err != nil {
 		h.logger.Error("Error adding services to order", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -120,7 +120,7 @@ func (h *OrderHandler) AddServicesToOrder(c *gin.Context) {
 
 func (h *OrderHandler) DeleteOrder(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	err := h.repo.DeleteOrder(context.Background(), uint64(id))
+	err := h.repo.DeleteOrder(context.Background(), id)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Error deleting order whith id=%d", id), zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

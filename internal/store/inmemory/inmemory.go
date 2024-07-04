@@ -8,16 +8,16 @@ import (
 
 	"sync"
 
-	"github.com/KozlovNikolai/CMDorders/internal/client"
-	"github.com/KozlovNikolai/CMDorders/internal/client/restclient"
 	"github.com/KozlovNikolai/CMDorders/internal/models"
+	"github.com/KozlovNikolai/CMDorders/internal/pkg/client"
+	"github.com/KozlovNikolai/CMDorders/internal/pkg/client/restclient"
 	"go.uber.org/zap"
 )
 
 type InMemoryOrderRepository struct {
 	logger      *zap.Logger
-	orders      map[uint64]models.Order
-	nextID      uint64
+	orders      map[int]models.Order
+	nextID      int
 	cliPatients client.IRemoteStore
 	cliServices client.IRemoteStore
 	mutex       sync.Mutex
@@ -26,20 +26,20 @@ type InMemoryOrderRepository struct {
 func NewInMemoryOrderRepository(logger *zap.Logger) *InMemoryOrderRepository {
 	return &InMemoryOrderRepository{
 		logger:      logger,
-		orders:      make(map[uint64]models.Order),
+		orders:      make(map[int]models.Order),
 		nextID:      1,
 		cliPatients: restclient.NewRestClient("http://localhost:8080", "/patients/", models.NewPatient(), logger),
 		cliServices: restclient.NewRestClient("http://localhost:8081", "/services/", models.NewService(), logger),
 	}
 }
 
-func (repo *InMemoryOrderRepository) CreateOrder(ctx context.Context, order models.Order) (uint64, error) {
-	patient, err := repo.cliPatients.GetByID(ctx, uint64(order.Patient.ID))
+func (repo *InMemoryOrderRepository) CreateOrder(ctx context.Context, order models.Order) (int, error) {
+	patient, err := repo.cliPatients.GetByID(ctx, order.PatientID)
 	if err != nil {
 		return 0, err
 	}
-	for _, service := range order.Services {
-		svc, err := repo.cliServices.GetByID(ctx, uint64(service.ID))
+	for _, serviceID := range order.ServiceIDs {
+		svc, err := repo.cliServices.GetByID(ctx, serviceID)
 		if err != nil {
 			return 0, err
 		}
@@ -62,46 +62,47 @@ func (repo *InMemoryOrderRepository) CreateOrder(ctx context.Context, order mode
 	return order.ID, nil
 }
 
-func (repo *InMemoryOrderRepository) GetOrderByID(ctx context.Context, order_id uint64) (*models.Order, error) {
+func (repo *InMemoryOrderRepository) GetOrderByID(ctx context.Context, orderID int) (*models.Order, error) {
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
-	order, exists := repo.orders[order_id]
+	order, exists := repo.orders[orderID]
 	if !exists {
 		return nil, errors.New("order not found")
 	}
 	return &order, nil
 }
 
-func (repo *InMemoryOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]models.Order, error) {
+func (repo *InMemoryOrderRepository) GetAllOrdersList(ctx context.Context, isActive bool) ([]models.Order, error) {
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
 	var orders []models.Order
 	for _, order := range repo.orders {
-		if is_active == 1 {
-			if order.IsActive == 1 {
+		switch isActive {
+		case true:
+			if order.IsActive {
 				orders = append(orders, order)
 			}
-		} else {
+		case false:
 			orders = append(orders, order)
 		}
 	}
 	return orders, nil
 }
 
-func (repo *InMemoryOrderRepository) GetOrdersByPatientID(ctx context.Context, patient_id uint64, is_active int8) ([]models.Order, error) {
+func (repo *InMemoryOrderRepository) GetOrdersByPatientID(ctx context.Context, patientID int, isActive bool) ([]models.Order, error) {
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
 	var orders []models.Order
-	msg := fmt.Sprintf("InMemory p-id=%d, is-a=%d\n", patient_id, is_active)
+	msg := fmt.Sprintf("InMemory p-id=%d, is-a=%v\n", patientID, isActive)
 	repo.logger.Debug("GetOrdersByPatientID",
 		zap.String("info", msg),
 	)
 	for _, order := range repo.orders {
-		if uint64(order.Patient.ID) != patient_id {
+		if order.PatientID != patientID {
 			continue
 		}
-		if is_active == 1 {
-			if order.IsActive == 1 {
+		if isActive {
+			if order.IsActive {
 				orders = append(orders, order)
 			}
 		} else {
@@ -120,37 +121,30 @@ func (repo *InMemoryOrderRepository) UpdateOrder(ctx context.Context, order mode
 	repo.orders[order.ID] = order
 	return nil
 }
-func (repo *InMemoryOrderRepository) AddServicesToOrder(ctx context.Context, order_id uint64, patient_id uint64, services []models.Service) error {
+func (repo *InMemoryOrderRepository) AddServicesToOrder(ctx context.Context, orderID int, patientID int, services []int) error {
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
-	order, exists := repo.orders[order_id]
+	order, exists := repo.orders[orderID]
 	if !exists {
 		return errors.New("order not found")
 	}
-	if patient_id != uint64(order.Patient.ID) {
+	if patientID != order.PatientID {
 		return errors.New("this patient is not represented in this order")
 	}
-	svcs := []models.Service{}
-	var servicesCasted []models.Service
-	var i interface{} = services
-	if s, ok := i.([]models.Service); ok {
-		servicesCasted = s
-	} else {
-		return errors.New("input parametr not equal []model.Service")
-	}
-	for _, svc := range servicesCasted {
-		_, err := repo.cliServices.GetByID(ctx, svc.ID)
+	svcs := []int{}
+	for _, svc := range services {
+		_, err := repo.cliServices.GetByID(ctx, svc)
 		if err != nil {
 			return err
 		}
 		svcs = append(svcs, svc)
 	}
-	order.Services = append(order.Services, svcs...)
-	repo.orders[order_id] = order
+	order.ServiceIDs = append(order.ServiceIDs, svcs...)
+	repo.orders[orderID] = order
 	return nil
 }
 
-func (repo *InMemoryOrderRepository) DeleteOrder(ctx context.Context, id uint64) error {
+func (repo *InMemoryOrderRepository) DeleteOrder(ctx context.Context, id int) error {
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
 	if _, exists := repo.orders[id]; !exists {

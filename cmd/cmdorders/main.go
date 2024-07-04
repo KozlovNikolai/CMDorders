@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/KozlovNikolai/CMDorders/internal/config"
+	"github.com/KozlovNikolai/CMDorders/internal/pkg/config"
 	"github.com/KozlovNikolai/CMDorders/internal/server"
 )
 

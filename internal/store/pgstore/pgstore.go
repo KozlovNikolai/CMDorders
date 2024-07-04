@@ -14,7 +14,7 @@ type PostgresOrderRepository struct {
 }
 
 // AddServicesToOrder implements store.IOrderRepository.
-func (repo *PostgresOrderRepository) AddServicesToOrder(ctx context.Context, order_id uint64, patient_id uint64, services []models.Service) error {
+func (repo *PostgresOrderRepository) AddServicesToOrder(ctx context.Context, order_id int, patient_id int, services []int) error {
 	panic("unimplemented")
 }
 
@@ -25,39 +25,39 @@ func NewPostgresOrderRepository(db *pgxpool.Pool, logger *zap.Logger) *PostgresO
 	}
 }
 
-// DeleteOrder(ctx context.Context, id uint64) error
+// DeleteOrder(ctx context.Context, id int) error
 
-func (repo *PostgresOrderRepository) CreateOrder(ctx context.Context, order models.Order) (uint64, error) {
-	var id uint64
+func (repo *PostgresOrderRepository) CreateOrder(ctx context.Context, order models.Order) (int, error) {
+	var id int
 	query := `
 		INSERT INTO orders (created_at, patient_id, service_id, is_active) 
 		VALUES ($1, $2, $3, $4) 
 		RETURNING id`
-	err := repo.db.QueryRow(ctx, query, order.CreatedAt, order.Patient.ID, order.Services, order.IsActive).Scan(&id)
+	err := repo.db.QueryRow(ctx, query, order.CreatedAt, order.PatientID, order.ServiceIDs, order.IsActive).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
 	return id, nil
 }
 
-func (repo *PostgresOrderRepository) GetOrderByID(ctx context.Context, order_id uint64) (*models.Order, error) {
+func (repo *PostgresOrderRepository) GetOrderByID(ctx context.Context, order_id int) (*models.Order, error) {
 	var order models.Order
 	query := `
 		SELECT id, created_at, patient_id, service_id, is_active 
 		FROM orders
 		WHERE id=$1`
 	row := repo.db.QueryRow(ctx, query, order_id)
-	err := row.Scan(&order.ID, &order.CreatedAt, &order.Patient.ID, &order.Services, &order.IsActive)
+	err := row.Scan(&order.ID, &order.CreatedAt, &order.PatientID, &order.ServiceIDs, &order.IsActive)
 	if err != nil {
 		return nil, err
 	}
 	return &order, nil
 }
 
-func (repo *PostgresOrderRepository) GetOrdersByPatientID(ctx context.Context, patient_id uint64, is_active int8) ([]models.Order, error) {
+func (repo *PostgresOrderRepository) GetOrdersByPatientID(ctx context.Context, patient_id int, is_active bool) ([]models.Order, error) {
 	var orders []models.Order
 	var query string
-	if is_active == 1 {
+	if is_active {
 		query = `
 		SELECT id, created_at, patient_id, service_id, is_active 
 		FROM orders
@@ -76,7 +76,7 @@ func (repo *PostgresOrderRepository) GetOrdersByPatientID(ctx context.Context, p
 
 	for rows.Next() {
 		var order models.Order
-		err := rows.Scan(&order.ID, &order.CreatedAt, &order.Patient.ID, &order.Services, &order.IsActive)
+		err := rows.Scan(&order.ID, &order.CreatedAt, &order.PatientID, &order.ServiceIDs, &order.IsActive)
 		if err != nil {
 			return nil, err
 		}
@@ -88,10 +88,10 @@ func (repo *PostgresOrderRepository) GetOrdersByPatientID(ctx context.Context, p
 	}
 	return orders, nil
 }
-func (repo *PostgresOrderRepository) GetAllOrdersList(ctx context.Context, is_active int8) ([]models.Order, error) {
+func (repo *PostgresOrderRepository) GetAllOrdersList(ctx context.Context, is_active bool) ([]models.Order, error) {
 	var orders []models.Order
 	var query string
-	if is_active == 1 {
+	if is_active {
 		query = `
 		SELECT id, created_at, patient_id, service_id, is_active 
 		FROM orders
@@ -109,7 +109,7 @@ func (repo *PostgresOrderRepository) GetAllOrdersList(ctx context.Context, is_ac
 
 	for rows.Next() {
 		var order models.Order
-		err := rows.Scan(&order.ID, &order.CreatedAt, &order.Patient.ID, &order.Services, &order.IsActive)
+		err := rows.Scan(&order.ID, &order.CreatedAt, &order.PatientID, &order.ServiceIDs, &order.IsActive)
 		if err != nil {
 			return nil, err
 		}
@@ -127,11 +127,11 @@ func (repo *PostgresOrderRepository) UpdateOrder(ctx context.Context, order mode
 		UPDATE orders 
 		SET created_at=$1, patient_id=$2, service_id=$3, is_active=$4 
 		WHERE id=$5`
-	_, err := repo.db.Exec(ctx, query, order.CreatedAt, order.Patient.ID, order.Services, order.IsActive, order.ID)
+	_, err := repo.db.Exec(ctx, query, order.CreatedAt, order.PatientID, order.ServiceIDs, order.IsActive, order.ID)
 	return err
 }
 
-func (repo *PostgresOrderRepository) DeleteOrder(ctx context.Context, id uint64) error {
+func (repo *PostgresOrderRepository) DeleteOrder(ctx context.Context, id int) error {
 	query := "DELETE FROM orders WHERE id=$1"
 	_, err := repo.db.Exec(ctx, query, id)
 	return err

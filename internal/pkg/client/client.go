@@ -5,6 +5,6 @@ import (
 )
 
 type IRemoteStore interface {
-	GetByID(ctx context.Context, id uint64) (interface{}, error)
+	GetByID(ctx context.Context, id int) (interface{}, error)
 	GetList(ctx context.Context) (interface{}, error)
 }
